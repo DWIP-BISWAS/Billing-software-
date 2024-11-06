@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing System</title>
+    <style>
+        /* Basic styling */
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2 { text-align: center; }
+        .bill-container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; }
+        
+        /* Shop header */
+        .shop-header { text-align: center; margin-bottom: 20px; }
+        .shop-header p { margin: 5px 0; }
+
+        /* Item inputs */
+        .item-inputs { margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .item-inputs input, .item-inputs button { padding: 10px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table, th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        
+        /* Totals */
+        .total { text-align: right; font-weight: bold; }
+
+        /* Actions */
+        .actions { text-align: center; margin-top: 20px; }
+        .actions button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="bill-container" id="bill">
+    <div class="shop-header">
+        <h2>D Mart</h2>
+        <p>Address: 94 krivara, Newtown</p>
+        <p>Timing: 9:00 AM - 9:00 PM</p>
+        <p>Date: <span id="currentDate"></span></p>
+    </div>
+
+    <div class="item-inputs">
+        <input type="text" id="itemName" placeholder="Item Name">
+        <input type="number" id="itemQuantity" placeholder="Quantity">
+        <input type="number" id="itemPrice" placeholder="Price">
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <table id="itemsTable">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody id="itemsList"></tbody>
+    </table>
+
+    <p class="total">GST (12%): ₹<span id="gstAmount">0.00</span></p>
+    <p class="total">Total: ₹<span id="totalAmount">0.00</span></p>
+
+    <div class="actions">
+        <button onclick="printBill()">Print Bill</button>
+        <button onclick="downloadBill()">Download Bill</button>
+    </div>
+</div>
+
+<script>
+    // Set current date
+    document.getElementById("currentDate").innerText = new Date().toLocaleDateString();
+
+    let items = [];
+
+    function addItem() {
+        const name = document.getElementById("itemName").value;
+        const quantity = parseInt(document.getElementById("itemQuantity").value);
+        const price = parseFloat(document.getElementById("itemPrice").value);
+
+        if (name && quantity && price) {
+            const total = quantity * price;
+            items.push({ name, quantity, price, total });
+            renderItems();
+            document.getElementById("itemName").value = '';
+            document.getElementById("itemQuantity").value = '';
+            document.getElementById("itemPrice").value = '';
+        }
+    }
+
+    function renderItems() {
+        const itemsList = document.getElementById("itemsList");
+        itemsList.innerHTML = '';
+
+        let subtotal = 0;
+        items.forEach((item, index) => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>₹${item.price.toFixed(2)}</td>
+                <td>₹${item.total.toFixed(2)}</td>
+            `;
+            itemsList.appendChild(row);
+            subtotal += item.total;
+        });
+
+        const gst = subtotal * 0.12;
+        const total = subtotal + gst;
+
+        document.getElementById("gstAmount").innerText = gst.toFixed(2);
+        document.getElementById("totalAmount").innerText = total.toFixed(2);
+    }
+
+    function printBill() {
+        const printContent = document.getElementById("bill").innerHTML;
+        const originalContent = document.body.innerHTML;
+
+        document.body.innerHTML = printContent;
+        window.print();
+        document.body.innerHTML = originalContent;
+        location.reload();  // Refresh to reset inputs after print
+    }
+
+    function downloadBill() {
+        const billContent = document.getElementById("bill").innerText;
+        const blob = new Blob([billContent], { type: "text/plain" });
+        const link = document.createElement("a");
+
+        link.href = URL.createObjectURL(blob);
+        link.download = "bill.txt";
+        link.click();
+    }
+</script>
+
+</body>
+</html>
